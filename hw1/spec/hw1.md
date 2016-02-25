@@ -11,6 +11,11 @@ Table of Contents
 - [Task 4: GuitarString](#GuitarString)
 - [Task 5: Iteration and Exceptions](#IterationExceptions)
 
+Getting the Skeleton Files
+--------------------------------
+
+Just the usual `git pull skeleton master`.
+
 Introduction
 --------------------------------
 In this homework, you will learn how to write and use packages, as well as get some hands-on practice with interfaces and abstract classes. We'll also get an opportunity to implement a simple data structure as well as an algorithm that is easy to implement given that data structure. Finally we'll add support for iteration and exceptions  (which we'll cover on Monday) to our data structure.
@@ -22,7 +27,7 @@ For this assignment, we'll create a synthesizer package intended for use by prog
 The synthesizer package has four components:
 
 - `BoundedQueue`, an interface which declares all the methods that must be implemented by any class that implements `BoundedQueue`.
-- `AbstractBoundedQueue`, an abstract class which implements `AbstractBoundedQueue`, capturing the redundancies between methods in `BoundedQueue`.
+- `AbstractBoundedQueue`, an abstract class which implements `BoundedQueue`, capturing the redundancies between methods in `BoundedQueue`.
 - `ArrayRingBuffer`, a class which extends `AbstractBoundedQueue` and uses an array as the actual implementation of the `BoundedQueue`.
 - `GuitarString`, which uses an `ArrayRingBuffer<Double>` to implement the [Karplus-Strong algorithm](http://en.wikipedia.org/wiki/Karplus%E2%80%93Strong_string_synthesis) to synthesize a guitar string sound.
 
@@ -73,7 +78,7 @@ For example, given an empty `BoundedQueue<Double>` of capacity 4, the state of t
 Of course, your `BoundedQueue.java` file won't actually do anything (since it's an interface), but it will define the contract that any `BoundedQueue` must follow.
 
 Make sure to decare this interface as part of the `synthesizer` package.  The syntax for declaring yourself to be part of a package is `package <packagename>;`.  For example, if you are part of
-the `animal` package, the top of your file should have a `package animal;` line.
+the `animal` package, the top of your file should have a `package animal;` line. Your package name should just be `synthesizer`, nothing else. 
 
 Before moving on, ensure that  `BoundedQueue` compiles: `javac BoundedQueue.java`. 
 
@@ -111,9 +116,8 @@ Create a new abstract class in a .java file called `AbstractBoundedQueue.java` t
     public abstract T peek();
     public abstract T dequeue();
     public abstract void enqueue(T x);
-    public abstract Iterator<T> iterator();
 
-Note that `isEmpty`, `isFull`, `peek`, `dequeue`, `enqueue`, and `iterator` are inherited from BoundedQueue, so *you should not to declare these explicitly in your AbstractBoundedQueue.java* file. The mysterious `protected` keyword above is something we'll talk about in lecture on 2/26. It just means that only subclasses of `AbstractBoundedQueue` can access this variable.
+Note that `isEmpty`, `isFull`, `peek`, `dequeue`, `enqueue`, are inherited from BoundedQueue, so *you should not to declare these explicitly in your AbstractBoundedQueue.java* file. The mysterious `protected` keyword above is something we'll talk about in lecture on 2/26. It just means that only subclasses of `AbstractBoundedQueue` can access this variable.
 
 The purpose of `AbstractBoundedQueue` will be to simply provide a protected `fillCount` and `capacity` variable that all subclasses will inherit, as well as so called "getter" methods `capacity()` and `fillCount()` that return `capacity` and `fillCount`, respectively. This saves a tiny amount of work for future implementations like `ArrayRingBuffer.java` (see next section).
 
@@ -174,7 +178,7 @@ We recommend you maintain one integer instance variable `first` that stores the 
 
 In the last section of this homework, we'll implement our `ArrayRingBuffer` to throw a run-time exception if the client attempts to `enqueue()` into a full buffer or call `dequeue()` or `peek()` on an empty buffer. We'll be covering exceptions on Monday, so hold off until then (or read ahead in HFJ or online).
 
-Once you've fleshed out the TODOs, make sure `ArrayRingBuffer` compiles before moving on. Optionally, you can add tests to the `TestArrayRingBuffer` class (either before or after your write `ArrayRingBuffer`). `TestArrayRingBuffer.java` will not be graded. To run TestArrayRingBuffer you'll need to run the following command from your hw1 folder as described in this [common package gotchas slide]().
+Once you've fleshed out the TODOs, make sure `ArrayRingBuffer` compiles before moving on. Optionally, you can add tests to the `TestArrayRingBuffer` class (either before or after your write `ArrayRingBuffer`). `TestArrayRingBuffer.java` will not be graded. To run TestArrayRingBuffer you'll need to run the following command from your hw1 folder as described in this [common package gotchas slide](https://docs.google.com/presentation/d/1CKlh3Yh_NYn-5NMkqES1qfAeTkPe9t8bS3UOqqh6qAY/edit#slide=id.g7a41441c3_1155).
 
     java synthesizer.TestArrayRingBuffer
 
@@ -195,11 +199,11 @@ Or visually, if the BoundedQueue is as shown on the top, we'd dequeue the 0.2, c
 
 ![karplus-strong](karplus-strong.png)
 
-You can play a double value with the StdAudio.play() method. For example StdAudio.play(0.333) will tell the diaphragm of your speaker to extend itself to 1/3rd of its total reach, StdAudio.play(-0.9) will tell it to stretch its little heart backwards almost as far as it can reach. Movement of the speaker diaphragm displaces air, and if you displace air in nice patterns, these disruptions will be intepreted by your consciousness as pleasing thanks to billions of years of evolution. See [this page](http://electronics.howstuffworks.com/speaker6.htm) for more. If you simply do StdAudio.play(0.9) and never play anything again, the diaphragm shown in the image would just be sitting still 9/10ths of the way forwards.
+You can play a double value with the StdAudio.play() method. For example StdAudio.play(0.333) will tell the diaphragm of your speaker to extend itself to 1/3rd of its total reach, StdAudio.play(-0.9) will tell it to stretch its little heart backwards almost as far as it can reach. Movement of the speaker diaphragm displaces air, and if you displace air in nice patterns, these disruptions will be intepreted by your consciousness as pleasing thanks to billions of years of evolution. See [this page](http://electronics.howstuffworks.com/speaker6.htm) for more. If you simply do StdAudio.play(0.9) and never play anything again, the diaphragm shown in the image would just be sitting still 9/10ths of the way forwards. 
 
-Rename `GuitarString.java.skeleton` to `GuitarString.java`. Complete 'GuitarString.java' so that it implements the Karplus-Strong algorithm. 
+Rename `GuitarString.java.skeleton` to `GuitarString.java`. Complete 'GuitarString.java' so that it implements steps 1 and 2 of the Karplus-Strong algorithm. Step 3 will be done by the client of the `GuitarString` class.
 
-The provided `TestGuitarString` class provides a sample test `testPluckTheAString` that attempts to play an A-note on a guitar string. You should hear an A-note when you run this test. If you don't, you should consider writing finer grained tests that inspect quantiative behavior of the the class. 
+For example, the provided `TestGuitarString` class provides a sample test `testPluckTheAString` that attempts to play an A-note on a guitar string. You should hear an A-note when you run this test. If you don't, you should try the `testTic` method and debug from there. Consider adding a `print` or `toString` method to `GuitarString.java` that will help you see what's going on between tics.
 
 Once you're relatively comfortable that GuitarString should be working, try compiling and running 'GuitarHeroLite'. It will provide an interface, allowing the user to interactively play sounds using the `synthesizer` package's `GuitarString` class.
 
@@ -214,7 +218,7 @@ Write a program GuitarHero that is similar to GuitarHeroLite, but supports a tot
 
 This keyboard arrangement imitates a piano keyboard: The "white keys" are on the qwerty and zxcv rows and the "black keys" on the 12345 and asdf rows of the keyboard. 
 
-The ith character of the string keyboard corresponds to a frequency of 440 × 2^(i - 24) / 12, so that the character 'q' is 110Hz, 'i' is 220Hz, 'v' is 440Hz, and ' ' is 880Hz. Don't even think of including 37 individual GuitarString variables or a 37-way if statement! Instead, create an array of 37 GuitarString objects and use keyboard.indexOf(key) to figure out which key was typed. Make sure your program does not crash if a key is pressed that does not correspond to one of your 37 notes.
+The ith character of the string keyboard corresponds to a frequency of 440 × 2^((i - 24) / 12), so that the character 'q' is 110Hz, 'i' is 220Hz, 'v' is 440Hz, and ' ' is 880Hz. Don't even think of including 37 individual GuitarString variables or a 37-way if statement! Instead, create an array of 37 GuitarString objects and use keyboard.indexOf(key) to figure out which key was typed. Make sure your program does not crash if a key is pressed that does not correspond to one of your 37 notes.
 
 This part of the assignment is not graded.
 
@@ -251,7 +255,7 @@ Consider your AbstractBoundedQueue. You don't need to change anything in this cl
 
 #### ArrayRingBuffer
 
-Now finally add the required `iterator()` method to `ArrayRingBuffer`. You'll need to define a private class that implements the `Iterator` interface. See lecture 14 for an example.
+Now finally add the required `iterator()` method to `ArrayRingBuffer`. You'll need to define a private class that implements the `Iterator` interface. See lecture 14 for an example: <a href="https://github.com/Berkeley-CS61B/lectureCode-sp16/blob/master/lec14/hugCode/ArrayMap.java">github</a> <a href="https://docs.google.com/presentation/d/1_kI2wXIQqbkMC2-ug03VQeskVMg_kjd1ySy8ocIoxNc/edit">slides</a>.
 
 #### Exceptions
 
@@ -277,12 +281,21 @@ For example, suppose we want to write a method that takes an integer argument, a
 An example of code using exceptions can be found in the demo folder (you'll need to ```git pull skeleton master```).
 -->
 
+Submission
+--------------------------------
+
+To submit this assignment, you must upload a .zip file containing your synthesizer folder. More detailed instructions coming later if you run into issues.
+
 Frequently Asked Questions
 ----------------
 
+#### My AbstractBoundedQueue won't compile because BoundedQueue isn't found.
+
+Look more closely at the AbstractBoundedQueue section of this assignment page for tips.
+
 #### I'm getting a "class file contains wrong class" error.
 
-Make sure all your Java files have the right package declaration at the top. Also make sure that anything that is part of the synthesizer package is in the synthesizer folder.
+Make sure all of your Java files have the right package declaration at the top. Also make sure that anything that is part of the synthesizer package is in the synthesizer folder.
 
 #### I'm getting a message that I did not override an abstract method, but I am!
 
@@ -290,6 +303,34 @@ Chances are you have a typo. You should always use the @Override tag when overri
 
 #### I'm getting ... in AbstractBoundedQueue and ... in BoundedQueue have the same erasure, yet neither overrides the other.
 
-Make sure your classes are defined as `AbstractBoundedQueue<T> extends BoundedQueue<T>` (or whatever type parameter you used instead of T).
+Make sure your classes are defined as `AbstractBoundedQueue<T> implements BoundedQueue<T>` (or whatever type parameter you used instead of T).
+
+#### When I try to run the provided tests I get "No runnable methods".
+
+Make sure you've uncommented the tests, including the `@Test` annotation.
+
+#### I'm failing the nested iteration test. What does this mean?
+
+Consider what happens when you run the following:
+
+    int[] someInts = new int[]{1, 2, 3};
+    for (int x : someInts) {
+        for (int y: someInts) {
+            System.out.println("x: " + x +  ", y:" + y);
+        }
+    }
+
+And think about how your code is not doing what is listed above.
+
+#### When I try to compile my code, it says type K#1 is not compatible with type K#2, or something similar.
+
+If you're defining an inner class, make sure it does not redeclare a new generic type parameter, e.g. the first `<Z>` given in `private class MapWizard<Z> implements Iterator<Z>{` should not be there!
+
+#### I'm getting a "No JSON object could be decoded" error.
+
+While `GuitarString` is a guitar string simulator, it should not involve playing any sounds. The playing should be done by the `GuitarString` client.
+
+#### Do I need to implement `remove()` from the Iterator interface?
+Classically, when you implement an interface, you need to write the actual definition of every declared method. However, it is not required for you to implement `default` methods, and in Java 8, `remove()` is a default method.
 
 Credits: RingBuffer figures from [wikipedia](http://en.wikipedia.org/wiki/Circular_buffer). This assignment adapted from [Kevin Wayne's Guitar Heroine](http://nifty.stanford.edu/2012/wayne-guitar-heroine/) assignment.
