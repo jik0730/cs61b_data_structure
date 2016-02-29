@@ -6,6 +6,15 @@ Change Log
 
 This section describes major changes that have been made to the spec since it was released.
 
+##### February 27
+
+Added more FAQs to address common questions about the mysterious JavaFX Nodes, Groups, and special root Group.
+
+##### February 25
+
+* Added a clarification to the runtimes: Using arrow keys or clicking should be resolved in constant time: but the length of each line is a constant, since the window can only be so wide.
+* Added links to Project 2 slide and video.
+
 ##### February 23
 
 * Added a requirement that shortcut+p prints the current cursor position, and removed the "cursor" option for the 2nd command line argument.
@@ -61,6 +70,11 @@ This is a brand new project, so bear with us as we work out kinks!  There is a c
 
 If you run into problems, be sure to check out the [FAQ](#frequently-asked-questions) section before posting to Piazza.  We'll keep this section updated as questions arise during the assignment.
 
+For some additional tips on the project, see:
+ - Project 2 Design Guide Video: [Link](https://youtu.be/MEOv98EFMqA)
+ - Project 2 Slides (video content and more): [Link](https://docs.google.com/presentation/d/15NGQTbiQWq0PgSIpleuAGMDo-QFdER4A-2GX0_59D2A/edit#slide=id.g11b3bd1314_0_6)
+ - Project 2 Design Analyis Worksheet (make a copy): [Link](https://docs.google.com/document/d/17IsU4plqtkbvxoF5f_uc7UMhxkaJ3TpxzaY67vh75fQ/edit)
+ - Example Project 2 Design Analysis Worksheet, using String as data structure: [Link](https://docs.google.com/document/d/17PUw2EffgyU5_zQHZ8GV52EhS3NPwUyghFfX6EmJiS4/edit)
 
 Overview
 ------------------
@@ -140,11 +154,13 @@ You'll also need to store information about how the text is displayed on the scr
 
 Updates to these data structure(s) can take linear time (i.e., the time can be proportional to the number of characters in the document).  In fact, we recommend an approach where you recompute all of the rendering information after each operation.  This makes word wrap much easier, because it's easier to determine where word wraps occur if you start from the beginning of the file.
 
-Moving the cursor (e.g., with a mouse click) should take time proportional to the number of characters in the line where the new cursor position is located. Moving the cursor should not take time proportional to the length of the file (so, for example, you should not need to look at all of the characters in the file to determine the new cursor position).
+Moving the cursor (e.g., with a mouse click) should take time constant time. However, since each line has a constant length (since the window can only be so wide), this means your runtime may be proportional to the number of characters in the line where the new cursor position is located. Moving the cursor should not take time proportional to the length of the file (so, for example, you should not need to look at all of the characters in the file to determine the new cursor position).
 
 ##### Why?
 
 You may be wondering why we require one part of operations like inserting a new character to be constant time (updating the data structure storing the character data), while the other part of inserting a new character is allowed to take linear time (re-rendering the document).  We'd like you to implement some things efficiently to give you some practice thinking about efficiency.  Your efficient data structure for storing character data paves the way for optimizations to rendering; however, these optimizations are tricky, so we're not requiring them in this assignment.  If you're interested, think about how you might do rendering more efficiently!
+
+A hidden side-effect of this constraint is that it prevents you from attempting designs that are overally complicated.
 
 ##### Non-requirements
 
@@ -390,13 +406,118 @@ Frequently Asked Questions
 
 No, you do not need to support any additional key presses beyond the ones mentioned in the spec.
 
-#### My Text / Rectangle / other Node isn't appearing on the screen!
+### What about the delete key, which deletes the character in front of the cursor on some operating systems?
 
-Make sure you've added the new Node to the scene graph; e.g., `root.getChildren().add(<new thing>)`.
+You do not need to handle this special delete functionality; you only need to handle the backspace key (which removes the character behind the cursor).
 
 #### How can I efficiently append to a String?
 
 You shouldn't need to append to a String for this assignment!  If you're just curious, Strings are immutable, so if you want to efficiently construct a string by appending substrings to it, you can use a `StringBuilder` (but to reiterate, you should not be appending to Strings or using StringBuilders for this assignment!).
+
+#### My Text / Rectangle / other Node isn't appearing on the screen!
+
+Make sure you've added the new Node to the scene graph; e.g., `root.getChildren().add(<new thing>)`.
+
+#### What is this mysterious root and why do I need to change its children? (or: what are Groups?)
+
+Before talking about `root`, it's helpful to describe JavaFX `Node`s.  JavaFX uses the `Node` abstract class to represent, essentially, "something that should be displayed on the screen."  All of the things you display -- Rectangles, Text, Groups, etc. -- are subclasses of Node.  Checkout the Node documentation here: https://docs.oracle.com/javase/8/javafx/api/javafx/scene/Node.html
+
+`root` is a special `Node` that JavaFX uses to determine what to display in the window.  Each JavaFX application has exactly one Scene (you can think of the Scene as a container for all of the JavaFX "stuff"), and each Scene has exactly one "root" node ("root" is just a naming convention used for this special `Node`).  JavaFX uses the root node to determine what do display: JavaFX displays the root node, and all of the children of the root node, and all of the children of the children, and so on.  This is why when you add a new Node (e.g., a Text object), you need to do this funny "root.getChildren.add(..)" call: this call adds your new Node as a child of "root" so that it will be displayed. [This page](http://docs.oracle.com/javafx/2/scenegraph/jfxpub-scenegraph.htm) talks in extensive detail about the scene graph; just looking at figure 1 is probably most useful.
+ 
+A Group is a special kind of Node that can have children.  Usual nodes (e.g., Text nodes) can't have any children.  You'll notice that the `root` is actually a `Group` (in the examples, we create it with something like `Group root = new Group()`).  It can be useful to create a Group if you want to style a bunch of nodes together.  For example, you can make a Group called "thingsIWantToMove", and when you adjust the layout position of "thingsIWantToMove", it will change the layout of all of the children of the "thingsIWantToMove" Group.  For example:
+
+    Group thingsIWantToMove = new Group();
+    root.getChildren().add(thingsIWantToMove);
+    Rectangle rectangleToMove = new Rectangle(10, 10, 10, 10);
+    Rectangle secondRectangleToMove = new Rectangle(20, 20, 20, 20);
+    thingsIWantToMove.getChildren().add(rectangleToMove);
+    thingsIWantToMove.getChildren().add(secondRectangleToMove);
+    
+Notice that `rectangleToMove` and `secondRectangleToMove` were both added as children of `thingsIWantToMove` rather than as children of `root`.  Since `thingsIWantToMove` is a child of root, these rectangles wil still be displayed on the screen.  Now, you can change the position of `thingsIWantToMove`, e.g.,
+
+    thingsIWantToMove.setLayoutX(30);
+    
+This call will change all of the children of `thingsIWantToMove` to be shifted to the right by 30 pixels.  Note that `rectangleToMove.getX()` will still return 10 (the original value it was set to be), but `rectangleToMove` will be displayed at an x-position of 10 _relative to the position of its parent_.  Since its parent is at an x-position of 30, `rectangleToMove` will be displayed at an _absolute_ x-position of 40 (i.e., it will be 40 pixels to the right of the edge of the window).  It will likely be helpful to do some "hello worlding" to understand how groups and layout positions work, where you make a simple example (much simpler than your editor!) just to experiment with.
+
+Groups may be useful when you're implementing the scroll bar, as hinted at in that section of the spec.
+
+#### What do you mean by "render"?  How do I re-render things?
+
+As described above, in JavaFX, to display a `Node` on the screen, it needs to be added as a child of `root` (or one of `root`'s children, or one of the children of one of `root`'s children, and so on).  JavaFX displays all of the children, grandchildren, etc. of `root` automatically; you don't need to call any special functions to make this happen.  You may be wondering how to change something once it's already been placed on the screen.  For example, suppose you add a rectangle to the screen:
+  
+    // Make a 5x5 rectangle at position 0, 0.
+    Rectange funGrowingRectangle = new Rectangle(0, 0, 5, 5);
+    root.getChildren().add(funGrowingRectangle);
+    
+And then later, you decide you'd like to make the rectangle larger.  One way to do this is to remove the rectangle from the children of root and then re-add a new one:
+
+    root.getChildren().remove(funGrowingRectangle);
+    // Make a 10x10 rectangle as position 0, 0.
+    Rectangle biggerFunnerGrowingRectangle = new Rectangle(0, 0, 10, 10);
+    root.getChildren().add(biggerFunnerGrowingRectangle);
+    
+However, you can also change the attributes of the existing `Node`.  For example, after running the previous code, you could change the size of `biggerFunnerGrowingRectangle` with:
+
+    biggerFunnerGrowingRectangle.setWidth(30);
+    biggerFunnerGrowingRectangle.setHeight(30);
+    
+And voila, you will see a rectangle with a width and height of 30! The call `getChildren().add(biggerFunnerGrowingRectangle)` added a pointer to `biggerFunnerGrowingRectangle` to the children, so changing properties of `biggerFunnerGrowingRectangle` means that the `Rectangle` shown on the screen will change accordingly (JavaFX will always display all nodes reachable from root, using the current properties of those nodes).  When we say that rendering should take linear time, we mean that updating all of the JavaFX objects (e.g., their positions, the font size, etc.) should take linear time.
+
+#### I want to add something as a child of `root` but I can't get access to `root` in the location where I want it!
+
+If you worked off of one of our examples, you probably created root with a call like:
+
+    Group root = new Group();
+    
+in your `Editor` class's `start()` function.  You may later have some other function in `Editor` where you want to use `root`:
+
+    public void drawCow() {
+        Cow myCow = new Cow("Clover");
+        root.getChildren().add(myCow);
+    }
+
+If you haven't changed anything else in your `Editor`, this code will cause a compile-time error because `root` cannot be found.  This error may seem vexing because `root` and the `start()` method are these mysterious JavaFX constructs, but remember your old friend the instance variable!  You can use an instance variable in your `Editor` class to save the value of root, if you like, just like you've used instance variables in the past to save variables that are needed in many places in your class (e.g., the array that you used to store data in `ArrayDeque`).  For example, you could add something at the top of your `Editor` class like:
+
+    public class Editor extends Application {
+        Group root;
+        ...
+
+and then in your `start` method, you can set the `root` instance variable rather than creating a new `root` variable:
+
+    root = new Group();
+    
+If you'd like, you can also create a no-argument constructor for your `Editor` class where you initialize `root`:
+
+    public Editor() {
+        root = new Group();
+    }
+    
+Then, in `start()`, you can use the `root` instance variable (e.g., when you're making a `Scene`) rather than creating a new `root` variable.  JavaFX will call the no-argument constructor of your application for you (before `start()` is called).  For an example, checkout `SingleLetterDisplay.java`, which uses a no-argument constructor to set up some instance variables.
+
+Maybe you want to use `root` in a different class, e.g., the `CowDrawer` class:
+
+    public class CowDrawer {
+        // The cow to draw.
+        Cow cow;
+        public CowDrawer() {
+            cow = new Cow("Bluebell");
+            root.getChildren().add(cow);
+        }
+    }
+    
+Again, you'll get a compiler warning.  Remember that `root` is just like any other variable, and if you want to let other classes have access to it, you'll need to explicitly tell those classes about it, e.g., by making it a constructor variable:
+
+
+    public class CowDrawer {
+        // The cow to draw.
+        Cow cow;
+        public CowDrawer(Group root) {
+            cow = new Cow("Bluebell");
+            root.getChildren().add(cow);
+        }
+    }
+
+This new code will compile, and the code that creates `CowDrawer` will need to pass the `root` variable into the constructor.    
 
 #### What does this error mean? "Caused by: java.lang.NullPointerException: Children: child node is null: parent = Group@4490e1f7[styleClass=root]""
 This typically means you’re trying to add a Node to the scene graph (e.g., using something like `group.getChildren().add(<new node>)`) that’s null or not completely initialized.
@@ -407,6 +528,14 @@ No.
 #### Can I use Java Libraries?
 
 You're welcome to use Java libraries for data structures like Lists, Queues, etc.  You can also use Java libraries for reading from and writing to files.  As mentioned in the previous question, you should not use any graphics libraries other than JavaFX.
+
+#### Can I use code that I found online and that's not from a Java library?
+
+In general, no; other than the Java libraries, all of the code used for this project should be your own.  If you have a specific use case that seems questionable, feel free to post on Piazza.
+
+#### Can I use functionality from earlier projects, even though I worked with a partner on those projects?
+
+Yes.
 
 #### I added a `ChangeListener` to ScrollBar to listen for when the user scrolls, but this listener gets called even when my code initiates a change to the value of the scroll bar! How do I avoid this?
 
@@ -425,6 +554,23 @@ No. We did some experimenting with `ScrollPane` and found that it was easier to 
 Yes.  JavaFX creates a scroll bar that's always the same wee size by default.  If you'd like, you can set the size of the scroll bar using the `setVisibleAmount` method, but this is not required, and it is tricky to get right.
 
 As an aside, if you get really excited about scroll bars (who wouldn't be?), you can write your own scroll bar using one of Java FX's rectangles, and setting the arc properties on the rectangle to get rounded corners.  You can use this functionality to create a fancy minimalist scroll bar (just a dark-grey rounded rectangle on the right side of the screen), and register mouse properties so that dragging the scroll bar changes the position of the text. This is entirely a fun experiment, and *not* something you should turn in with your assignment, because it will break the grading of your assignment.
+
+#### I'm getting an error from JavaFX that says duplicate children were added.  What does this mean?
+
+This error is happening because you're adding the same Node object to the root twice.  For example, suppose you do something like:
+ 
+    Text t1 = new Text("h");
+    root.getChildren().add(t1);
+ 
+Now, if you change t1 and try to add it again:
+    
+    t1.setText("hi");
+    root.getChildren().add(t1);
+ 
+The second call will throw an error, because JavaFX recognizes that t1 is already in children.  JavaFX displays all of the nodes that are children of root, or children of children of root, and so on.  If you change a node that is already reachable from root (e.g., in the example above, if you change the string stored in t1), JavaFX will update the displayed text automatically.  If you want to add another piece of text to root, you should do something like:
+ 
+    Text t2 = new Text("my new text");
+    root.getChildren().add(t2);
 
 Acknowledgements
 ------------
