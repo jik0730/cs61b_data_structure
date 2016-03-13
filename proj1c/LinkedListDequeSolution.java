@@ -7,7 +7,7 @@
   * make it implement your Deque interface. */
 import java.util.LinkedList;
 
-public class LinkedListDequeSolution<Item> extends LinkedList<Item> {
+public class LinkedListDequeSolution<Item> extends LinkedList<Item> implements Deque<Item>{
     public void printDeque() {
         for (Item x : this) {
             System.out.print(x + " ");
