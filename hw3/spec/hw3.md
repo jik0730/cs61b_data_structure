@@ -110,7 +110,9 @@ Where the methods work as follows:
 
 For example, if we have a `SimpleOomage` called `someOomage`, and it is in position number 3 of bucket number 9 out of 16 buckets, then `xCoord(3)` would give us the desired x coordinate and `yCoord(9, 16)` would give us the desired y coordinate. Thus, we'd call `someOomage.draw(xCoord(3), yCoord(9, 16), scale)` to visualize the `SimpleOomage` as it appears in the hash table with the scaling factor `scale`.
 
-For your code to pass the autograder test, you must map negative hashCodes as described in [this slide](https://docs.google.com/presentation/d/1H7253NmqEyb4rvwEQ6FQL_10tXNmAf6qBh8YTqNIvM4/edit#slide=id.g11e6c89e47_1_423). That is, -1 should map to bucket M-1, not bucket 1. To do this, use `(hashCode & 0x7FFFFFFF) % M` instead of `Math.abs(hashCode) % M`. `& 0x7FFFFFFF` throws away the top bit of a number. We'll discuss this briefly in a later lecture in 61B.
+One potential ambiguity is how to map hash codes to bucket numbers. While there are many ways to do this, we'll use the technique from the optional textbook, where we calculate `(hashCode & 0x7FFFFFFF) % M`. You should not use `Math.abs(hashCode) % M`. See the FAQ for why. 
+
+In case you're curious, `& 0x7FFFFFFF` throws away the top bit of a number. We'll discuss this briefly in a later lecture in 61B.
 
 Use these methods to fill in `visualize(Set<Oomage> set, int M)`. When you're done, your visualization should look something like the following:
 
@@ -139,6 +141,8 @@ Since a visual inspection of random `ComplexOomage` objects did not show the fla
 
 Then run `TestComplexOomage`. The code should pass, since the `testRandomItemsHashCodeSpread` method that uses `haveNiceHashCodeSpread` is not smart enough to expose the flaw.
 
+Note that `haveNiceHashCodeSpread` only really makes sense for large N (e.g. the test will trivially fail if N = 1, as 1 > 1 / 2.5).
+
 #### testWithDeadlyParams and binary representations
 
 Now finally we'll unveil the flaw. By carefully inspecting the given `hashCode` function, devise a test `testWithDeadlyParams` that this `hashCode` function fails due to poor distribution of `ComplexOomage` objects. 
@@ -158,6 +162,8 @@ Submission
 
 Submit a zip file containing just the folder for your hw3 package (similar to hw2).
 
+To give you some small amount of flexibility in the problems you want to focus on, we've set up the AG to give you full credit so long as you pass all but one test. Thus if you're having trouble with any particular part of the HW, feel free to skip it at no penalty.
+
 FAQ
 --------------------------------
 
@@ -171,7 +177,7 @@ This tells Java it may use up to 2,048 megabytes of memory. If you don't have th
 
 #### I'm failing the HashTableVisualizer test!
 
-For your code to pass the autograder test, you must map negative hashCodes as described in [this slide](https://docs.google.com/presentation/d/1H7253NmqEyb4rvwEQ6FQL_10tXNmAf6qBh8YTqNIvM4/edit#slide=id.g11e6c89e47_1_423). That is, -1 should map to bucket M-1, not bucket 1. To do this, use `(hashCode & 0x7FFFFFFF) % M` instead of `Math.abs(hashCode) % M`. `& 0x7FFFFFFF` throws away the top bit of a number. We'll discuss this briefly in a later lecture in 61B.
+You must convert from hashCode to bucket number using `(hashCode & 0x7FFFFFFF) % M`. You should not use `Math.abs(hashCode) % M`. 
 
 #### Why can't I just use Math.abs?
 
