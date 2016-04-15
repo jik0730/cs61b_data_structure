@@ -1,4 +1,4 @@
-import java.awt.Color;
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.util.Base64;
@@ -7,6 +7,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 /* Maven is used to pull in these dependencies. */
 import com.google.gson.Gson;
@@ -62,6 +68,8 @@ public class MapServer {
         "end_lat", "end_lon"};
     /* Define any static variables here. Do not define any instance variables of MapServer. */
     private static GraphDB g;
+    private static QuadTree quadTree;
+    private static BufferedImage displayedMap;
 
     /**
      * Place any initialization statements that will be run before the server main loop here.
@@ -70,6 +78,7 @@ public class MapServer {
      **/
     public static void initialize() {
         g = new GraphDB(OSM_DB_PATH);
+        quadTree = new QuadTree();
     }
 
     public static void main(String[] args) {
@@ -202,7 +211,46 @@ public class MapServer {
      * @see #REQUIRED_RASTER_REQUEST_PARAMS
      */
     public static Map<String, Object> getMapRaster(Map<String, Double> params, OutputStream os) {
+        double queryDpp = (params.get("lrlon") - params.get("ullon")) / params.get("w");
+        int depth = quadTree.findDepth(queryDpp);
+        double[] lonAndLat = quadTree.findPositionOfRasteredImage(depth, params.get("ullon"),
+                params.get("ullat"), params.get("lrlon"), params.get("lrlat"));
+        //, params.get("w"), params.get("h")
+
+        System.out.println(params);
         HashMap<String, Object> rasteredImageParams = new HashMap<>();
+//        try {
+//            BufferedImage im = ImageIO.read(new File(IMG_ROOT + "root.png"));
+//            ImageIO.write(im, "png", os);
+//            rasteredImageParams.put("raster_ul_lon", ROOT_ULLON);
+//            rasteredImageParams.put("raster_ul_lat", ROOT_ULLAT);
+//            rasteredImageParams.put("raster_lr_lon", ROOT_LRLON);
+//            rasteredImageParams.put("raster_lr_lat", ROOT_LRLAT);
+//            rasteredImageParams.put("raster_width", (int) im.getWidth());
+//            rasteredImageParams.put("raster_height", (int) im.getHeight());
+//            rasteredImageParams.put("depth", 6);
+//            rasteredImageParams.put("query_success", true);
+//        } catch (IOException ioException) {
+//            System.out.println("Could not read image");
+//        }
+        /** Draw whole image. */
+        try {
+            displayedMap = quadTree.fullImage(depth, params.get("ullon"),
+                    params.get("ullat"), params.get("lrlon"), params.get("lrlat"), params.get("w"), params.get("h"));
+            ImageIO.write(displayedMap, "png", os);
+
+            rasteredImageParams.put("raster_ul_lon", lonAndLat[0]);
+            rasteredImageParams.put("raster_ul_lat", lonAndLat[1]);
+            rasteredImageParams.put("raster_lr_lon", lonAndLat[2]);
+            rasteredImageParams.put("raster_lr_lat", lonAndLat[3]);
+            rasteredImageParams.put("raster_width", displayedMap.getWidth());
+            rasteredImageParams.put("raster_height", displayedMap.getHeight());
+            rasteredImageParams.put("depth", depth);
+            rasteredImageParams.put("query_success", true);
+        } catch (IOException ioexeption) {
+            ioexeption = new IOException("Cannot open the image file.");
+        }
+
         return rasteredImageParams;
     }
 
@@ -217,6 +265,26 @@ public class MapServer {
      * @return A LinkedList of node ids from the start of the route to the end.
      */
     public static LinkedList<Long> findAndSetRoute(Map<String, Double> params) {
+        double x1 = params.get("start_lon");
+        double y1 = params.get("start_lat");
+        double x2 = params.get("end_lon");
+        double y2 = params.get("end_lat");
+
+        quadTree.transferRoutePositions(x1, y1, x2, y2);
+
+        try {
+
+            SAXParser saxParser = SAXParserFactory.newInstance().newSAXParser();
+            MapDBHandler mapDBHandler = new MapDBHandler(g);
+            saxParser.parse(OSM_DB_PATH, mapDBHandler);
+
+            String a = "A";
+        } catch (Exception e) {
+            System.out.println("? I DONT KNOW ?");
+        }
+
+
+
         return new LinkedList<>();
     }
 
@@ -224,6 +292,7 @@ public class MapServer {
      * Clear the current found route, if it exists.
      */
     public static void clearRoute() {
+        quadTree.clearRoute();
     }
 
     /**
