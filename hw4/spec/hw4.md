@@ -160,13 +160,23 @@ I should get the following output:
 Submission
 --------------------------------
 
-Submit a zip file containing just the folder for your hw4 package (similar to hw3). It should contain **Board.java**, and **Solver.java**.
+Submit a zip file containing just the folder for your hw4 package (similar to hw3). It should contain **Board.java**, and **Solver.java**. Due to technical limitations of this autograder, it should contain no other .java files. If you have auxiliary java files (e.g. SearchNode.java), please move these classes into `Board` or `Solver`. It's OK if you also include `BoardUtils.class`.
 
 FAQ
 --------------------------------
 #### The autograder is complaining that graderhw4.Board objects can't be converted to Board or something like that.
 
 The first step of the AG swaps out any usage of `Board` with `graderhw4.Board` in your `Solver.java`. However, it is not smart enough to find other classes (yet). For now, move your `SearchNode.java` class inside of `Solver.java`.
+
+Likewise, if you have style errors, it will also fail. For example, if your code says 
+
+    `neighbors=BoardUtils.`
+
+instead of
+
+    `neighbors = BoardUtils`
+
+My string matching code will fail.
 
 #### Why am I getting cannot resolve symbol 'BoardUtils'?
 You are probably compiling from the wrong folder. Compile from the "login/hw4" directory, not "login/hw4/hw4/puzzle".
@@ -226,7 +236,11 @@ If your code is taking longer, by far the **most likely issue is that you are no
 
 It is not enough to simply look at your code for the optimization and declare that it is correct. Many students have indicated confidence in their optimization implementation, only to discover a subtle bug. Use print statements or the debugger to ensure that a board never enqueues the board it came from.
 
-Hints: Recall that there is a difference between `==` and `equals`. Recall also that the optimization is that you will not re-enqueue the PREVIOUS board, not the current board. These two situations cover 95% of the bugs I've seen.
+Situations that cover 98% of student performance bugs:
+ - Recall that there is a difference between `==` and `equals`.
+ - Recall also that the optimization is that you should not "enqueue a neighbor if its board is the same as the board of the **previous** search node". Checking vs. the current board does nothing. In other words, no Node should ever enqueue its parent.
+ - Recall that the optimization is that a board should not enqueue its own parent! This is different than checking that it is different from the board that was dequeued two iterations of A* ago.
+ 
 
 #### How do I ensure my Board class immutable?
 
