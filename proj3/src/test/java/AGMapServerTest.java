@@ -2,9 +2,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.Before;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -57,6 +55,14 @@ public class AGMapServerTest {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             MapServer.getMapRaster(p.raster_params, os);
             byte[] student_output = os.toByteArray();
+            try {
+                File f = new File("output/" + "raster_" + i + ".png");
+                FileOutputStream fos = new FileOutputStream(f);
+                fos.write(student_output);
+                fos.flush(); fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             assertArrayEquals("Raw image output differed for input: " + p.raster_params + ".\n See " +
                     "example image " + i + ".\n", p.raster_output, student_output);
         }
@@ -103,11 +109,21 @@ public class AGMapServerTest {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             MapServer.getMapRaster(p.raster_params, os);
             byte[] student_output = os.toByteArray();
+            try {
+                File f = new File("output/" + "route_" + i + ".png");
+                FileOutputStream fos = new FileOutputStream(f);
+                fos.write(student_output);
+                fos.flush(); fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             assertArrayEquals("Raw image output differed for input: " + p.raster_params + "\nWith" +
                     " route params: " + p.route_params + ".\n See " +
                     "example image " + i + ".\n", p.route_raster, student_output);
         }
     }
+
 
 
     /**
