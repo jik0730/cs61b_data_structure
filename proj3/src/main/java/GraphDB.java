@@ -16,12 +16,16 @@ public class GraphDB {
      * Example constructor shows how to create and start an XML parser.
      * @param db_path Path to the XML file to be parsed.
      */
-    public GraphDB(String db_path) {
+    private BerkeleyGraph bg;
+
+    public GraphDB(String dbPath, BerkeleyGraph bg) {
+        this.bg = bg;
+
         try {
-            File inputFile = new File(db_path);
+            File inputFile = new File(dbPath);
             SAXParserFactory factory = SAXParserFactory.newInstance();
             SAXParser saxParser = factory.newSAXParser();
-            MapDBHandler maphandler = new MapDBHandler(this);
+            MapDBHandler maphandler = new MapDBHandler(this, bg);
             saxParser.parse(inputFile, maphandler);
         } catch (ParserConfigurationException | SAXException | IOException e) {
             e.printStackTrace();
@@ -44,5 +48,6 @@ public class GraphDB {
      *  we can reasonably assume this since typically roads are connected.
      */
     private void clean() {
+        bg.clean();
     }
 }

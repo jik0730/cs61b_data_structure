@@ -2,9 +2,10 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.HashSet;
+import java.util.Arrays;
+import java.util.ArrayList;
 
 /**
  *  Parses OSM XML files using an XML SAX parser. Used to construct the graph of roads for
@@ -29,10 +30,17 @@ public class MapDBHandler extends DefaultHandler {
                     "residential", "living_street", "motorway_link", "trunk_link", "primary_link",
                     "secondary_link", "tertiary_link"));
     private String activeState = "";
+    private boolean allowedWay = false;
     private final GraphDB g;
+    private BerkeleyGraph bg;
+    private Long ID;
+    private double lon;
+    private double lat;
+    private ArrayList<Long> adjNodes;
 
-    public MapDBHandler(GraphDB g) {
+    public MapDBHandler(GraphDB g, BerkeleyGraph bg) {
         this.g = g;
+        this.bg = bg;
     }
 
     /**
@@ -52,19 +60,38 @@ public class MapDBHandler extends DefaultHandler {
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes)
             throws SAXException {
-        /* Some example code on how you might begin to parse XML files. */
+
+        /** Node without name. */
         if (qName.equals("node")) {
             activeState = "node";
+            ID = Long.parseLong(attributes.getValue("id"));
+            lon = Double.parseDouble(attributes.getValue("lon"));
+            lat = Double.parseDouble(attributes.getValue("lat"));
+            bg.addVertex(ID, lon, lat);
+
+            /** Way, prepare to make a set of adj nodes. */
         } else if (qName.equals("way")) {
             activeState = "way";
-//            System.out.println("Beginning a way...");
+            adjNodes = new ArrayList<>();
+
+            /** Way with nd, add adj nodes into array list. */
+        } else if (activeState.equals("way") && qName.equals("nd")) {
+            adjNodes.add(Long.parseLong(attributes.getValue("ref")));
+
         } else if (activeState.equals("way") && qName.equals("tag")) {
             String k = attributes.getValue("k");
             String v = attributes.getValue("v");
-//            System.out.println("Tag with k=" + k + ", v=" + v + ".");
+            if (k.equals("highway") && ALLOWED_HIGHWAY_TYPES.contains(v)) {
+                allowedWay = true;
+            }
+
+            /** Vertices with name. */
         } else if (activeState.equals("node") && qName.equals("tag") && attributes.getValue("k")
                 .equals("name")) {
-//            System.out.println("Node with name: " + attributes.getValue("v"));
+            String v = attributes.getValue("v");
+            bg.addVertex(ID, lon, lat, v);
+            bg.addCleanedNames(ID, v);
+            bg.addNames(ID, lon, lat, v);
         }
     }
 
@@ -81,8 +108,10 @@ public class MapDBHandler extends DefaultHandler {
      */
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
-        if (qName.equals("way")) {
-//            System.out.println("Finishing a way...");
+        if (qName.equals("way") && allowedWay) {
+            bg.addadjVertices(adjNodes);
+            adjNodes.clear();
+            allowedWay = false;
         }
     }
 

@@ -2,8 +2,14 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.Before;
 
+<<<<<<< HEAD
 import java.io.*;
 import java.util.Collections;
+=======
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
+>>>>>>> 665cf52c2bb41b1d9a9f64c0c2f019f71261804f
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +40,7 @@ public class AGMapServerTest {
             assertTrue(m2.containsKey(key));
             Object o1 = m1.get(key);
             Object o2 = m2.get(key);
-            if (o1 instanceof Double && o2 instanceof Double) {
+            if (o1 instanceof Double) {
                 assertTrue(err, Math.abs((Double)o1 - (Double)o2) < doubleThreshhold);
             } else {
                 assertEquals(err, o1, o2);
@@ -153,9 +159,6 @@ public class AGMapServerTest {
     public void testGetLocations() throws Exception {
         for (TestParams p : params) {
             List<Map<String, Object>> student_search_result = MapServer.getLocations(p.actual_search_param);
-            Collections.sort(student_search_result,
-                    (Map<String, Object> o1, Map<String, Object> o2) ->
-                            ((Long) o1.get("id")).compareTo((Long) o2.get("id")));
             assertEquals("Search results differ for search term: " + p.actual_search_param,
                     p.actual_search_result, student_search_result);
         }

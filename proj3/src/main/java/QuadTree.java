@@ -1,9 +1,13 @@
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Stroke;
+import java.awt.BasicStroke;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 /**
  * Created by Ingyo on 2016. 4. 10..
@@ -20,69 +24,26 @@ public class QuadTree {
     /** Tile size(Resolution) */
     public static final int TILE_SIZE = 256;
 
-    private Node root = new Node("0", 0, (ROOT_LRLON - ROOT_ULLON) / (Math.pow(2.0, (double) 0) * TILE_SIZE),
-            ROOT_ULLON, ROOT_ULLAT, ROOT_LRLON, ROOT_LRLAT);
+    private Node root = new Node("", 0, 
+        (ROOT_LRLON - ROOT_ULLON) / (Math.pow(2.0, (double) 0) * TILE_SIZE),
+        ROOT_ULLON, ROOT_ULLAT, ROOT_LRLON, ROOT_LRLAT);
 
-    private static double start_lon, start_lat, end_lon, end_lat;
+    private static double startLon, startLat, endLon, endLat;
     private static boolean clear = false;
+    private static LinkedList<BerkeleyGraph.Vertex> verticesList;
+    private static ArrayList<String> fileNumber;
+
+    private int index = 0;
 
     private class Node {
         Node UL, UR, LL, LR;
-        //BufferedImage image;
         String fileName;
         double dpp;
         int depth;
         double ullon, ullat, lrlon, lrlat;
-
-        private Node(File file) {
-            String fileName = file.getName().substring(0, file.getName().lastIndexOf('.'));
-            Node temp = root;
-            char num;
-
-            try {
-                for (int i = 0; i < fileName.length() - 1; i++) {
-                    num = fileName.charAt(i);
-                    if (num == '1') {
-                        temp = temp.UL;
-                    } else if (num == '2') {
-                        temp = temp.UR;
-                    } else if (num == '3') {
-                        temp = temp.LL;
-                    } else if (num == '4') {
-                        temp = temp.LR;
-                    }
-
-                }
-            } catch (NullPointerException o) {
-                System.out.println("Null point exception occured22.");
-            }
-
-            try {
-                num = fileName.charAt(fileName.length() - 1);
-                double[] tempLonLat = calculateLonLat(fileName);
-                if (num == '1') {
-                    temp.UL = new Node(fileName, fileName.length(),
-                            (ROOT_LRLON - ROOT_ULLON) / (Math.pow(2.0, (double) fileName.length()) * TILE_SIZE),
-                            tempLonLat[0], tempLonLat[1], tempLonLat[2], tempLonLat[3]);
-                } else if (num == '2') {
-                    temp.UR = new Node(fileName, fileName.length(),
-                            (ROOT_LRLON - ROOT_ULLON) / (Math.pow(2.0, (double) fileName.length()) * TILE_SIZE),
-                            tempLonLat[0], tempLonLat[1], tempLonLat[2], tempLonLat[3]);
-                } else if (num == '3') {
-                    temp.LL = new Node(fileName, fileName.length(),
-                            (ROOT_LRLON - ROOT_ULLON) / (Math.pow(2.0, (double) fileName.length()) * TILE_SIZE),
-                            tempLonLat[0], tempLonLat[1], tempLonLat[2], tempLonLat[3]);
-                } else if (num == '4') {
-                    temp.LR = new Node(fileName, fileName.length(),
-                            (ROOT_LRLON - ROOT_ULLON) / (Math.pow(2.0, (double) fileName.length()) * TILE_SIZE),
-                            tempLonLat[0], tempLonLat[1], tempLonLat[2], tempLonLat[3]);
-                }
-            } catch (NullPointerException e) {
-                System.out.println("fuckme");
-            }
-        }
-
-        private Node(String fileName, int depth, double dpp, double ullon, double ullat, double lrlon, double lrlat) {
+        
+        private Node(String fileName, int depth, double dpp, 
+            double ullon, double ullat, double lrlon, double lrlat) {
             this.fileName = fileName;
             this.depth = depth;
             this.dpp = dpp;
@@ -93,11 +54,14 @@ public class QuadTree {
         }
 
         private Node() {
+        }
 
+        private String getName() {
+            return this.fileName;
         }
 
         /** Calculate tile's longitude and latitude with its fileName. */
-        private double[] calculateLonLat(String fileName) {
+        private double[] calculateLonLat(String fileNamee) {
             double[] toReturn = new double[4];
             double x1 = ROOT_ULLON;
             double y1 = ROOT_ULLAT;
@@ -106,8 +70,8 @@ public class QuadTree {
             double w = x2 - x1;
             double h = y1 - y2;
 
-            for (int i = 0; i < fileName.length(); i++) {
-                char num = fileName.charAt(i);
+            for (int i = 0; i < fileNamee.length(); i++) {
+                char num = fileNamee.charAt(i);
 
                 if (num == '1') {
                     x2 -= w / Math.pow(2.0, (double) (i + 1));
@@ -135,38 +99,62 @@ public class QuadTree {
 
     /** Constructor of QuadTree and make a whole tree only with constructor. */
     public QuadTree() {
-        File img_Dir = new File(IMG_ROOT);
-        File[] img_arr = img_Dir.listFiles();
-        //makeFullTreeWithNoValue(7, root);
-
-        for (int i = 1; i < img_arr.length - 1; i++) {
-            new Node(img_arr[i]);
-        }
-
+        fileNumber = new ArrayList<>();
+        makeFileList();
+        makeChild(root, 1, ROOT_ULLON, ROOT_ULLAT, ROOT_LRLON, ROOT_LRLAT);
     }
 
-    private void makeFullTreeWithNoValue(int depth, Node root) {
-        if (depth == 0) {
-            return ;
+    public void makeFileList() {
+        File[] files = new File(IMG_ROOT).listFiles();
+        ArrayList<String> fileList = new ArrayList<>();
+        for (int i = 1; i < files.length; i++) {
+            if (files[i].isFile()) {
+                fileList.add(files[i].getName());
+            }
         }
+        for (int i = 0; i < fileList.size(); i++) {
+            fileNumber.add(fileList.get(i).substring(0, fileList.get(i).lastIndexOf('.')));
+        }
+    }
 
-        if (root.UL == null) {
-            root.UL = new Node();
-            makeFullTreeWithNoValue(depth - 1, root.UL);
+    public void makeChild(Node x, int height, 
+        double ullon, double ullat, double lrlon, double lrlat) {
+        index++;
+        if (height > 7) {
+            return;
         }
-        if (root.UR == null) {
-            root.UR = new Node();
-            makeFullTreeWithNoValue(depth - 1, root.UR);
+        if (x.UL == null && index <= fileNumber.size() - 1) {
+            double tempX = lrlon - (ROOT_LRLON - ROOT_ULLON) / Math.pow(2.0, height);
+            double tempY = lrlat + (ROOT_ULLAT - ROOT_LRLAT) / Math.pow(2.0, height);
+            x.UL = new Node(x.getName() + "1", height,
+                    (ROOT_LRLON - ROOT_ULLON) / (Math.pow(2.0, (double) height) * TILE_SIZE),
+                    ullon, ullat, tempX, tempY);
+            makeChild(x.UL, height + 1, ullon, ullat, tempX, tempY);
         }
-        if (root.LL == null) {
-            root.LL = new Node();
-            makeFullTreeWithNoValue(depth - 1, root.LL);
+        if (x.UR == null && index <= fileNumber.size() - 1) {
+            double tempY = lrlat + (ROOT_ULLAT - ROOT_LRLAT) / Math.pow(2.0, height);
+            double tempX = ullon + (ROOT_LRLON - ROOT_ULLON) / Math.pow(2.0, height);
+            x.UR = new Node(x.getName() + "2", height,
+                    (ROOT_LRLON - ROOT_ULLON) / (Math.pow(2.0, (double) height) * TILE_SIZE),
+                    tempX, ullat, lrlon, tempY);
+            makeChild(x.UR, height + 1, tempX, ullat, lrlon, tempY);
         }
-        if (root.LR == null) {
-            root.LR = new Node();
-            makeFullTreeWithNoValue(depth - 1, root.LR);
+        if (x.LL == null && index <= fileNumber.size() - 1) {
+            double tempY = ullat - (ROOT_ULLAT - ROOT_LRLAT) / Math.pow(2.0, height);
+            double tempX = lrlon - (ROOT_LRLON - ROOT_ULLON) / Math.pow(2.0, height);
+            x.LL = new Node(x.getName() + "3", height,
+                    (ROOT_LRLON - ROOT_ULLON) / (Math.pow(2.0, (double) height) * TILE_SIZE),
+                    ullon, tempY, tempX, lrlat);
+            makeChild(x.LL, height + 1, ullon, tempY, tempX, lrlat);
         }
-        return ;
+        if (x.LR == null && index <= fileNumber.size() - 1) {
+            double tempX = ullon + (ROOT_LRLON - ROOT_ULLON) / Math.pow(2.0, height);
+            double tempY = ullat - (ROOT_ULLAT - ROOT_LRLAT) / Math.pow(2.0, height);
+            x.LR = new Node(x.getName() + "4", height,
+                    (ROOT_LRLON - ROOT_ULLON) / (Math.pow(2.0, (double) height) * TILE_SIZE),
+                    tempX, tempY, lrlon, lrlat);
+            makeChild(x.LR, height + 1, tempX, tempY, lrlon, lrlat);
+        }
     }
 
     /** Find depth with given queryDpp. */
@@ -206,22 +194,13 @@ public class QuadTree {
         double dppForRoute = ttt.dpp;
 
         /** Find some tiles to connect. */
-        /** ******************************
-         * Fucking border problem!!!!!!! * (while 문에)
-         * *******************************/
-
         while (ttt.ullat > y2) {
-            // previous base case: tempY > y2 - unitY
-            // current base case: height < h + 256
             tempX = x1;
             width = 0;
             while (ttt.ullon < x2) {
-                // previous base case: tempX < x2 + unitX
-                // current base case: width < w + 256
                 try {
                     images.add(ImageIO.read(new File(IMG_ROOT + ttt.fileName + ".png")));
-//                    System.out.println("/" + ttt.ullon + "/" + ttt.ullat + "/" + ttt.lrlon + "/" + ttt.lrlat);
-                } catch(IOException ioexception) {
+                } catch (IOException ioexception) {
                     ioexception = new IOException("Cannot open the image");
                 }
                 tempX += unitX;
@@ -246,10 +225,10 @@ public class QuadTree {
 
         int x = 0;
         int y = 0;
-        for(BufferedImage image : images){
+        for (BufferedImage image : images) {
             g.drawImage(image, x, y, null);
             x += 256;
-            if(x >= result.getWidth()){
+            if (x >= result.getWidth()) {
                 x = 0;
                 y += image.getHeight();
             }
@@ -259,12 +238,9 @@ public class QuadTree {
         return result;
     }
 
-    /** ******************************
-     * Fucking right side border problem!!!!!!! *
-     * *******************************/
-
     /** Return the positon of rastered image. */
-    public double[] findPositionOfRasteredImage(int depth, double x1, double y1, double x2, double y2) {
+    public double[] findPositionOfRasteredImage(int depth, 
+        double x1, double y1, double x2, double y2) {
         if (x1 < ROOT_ULLON) {
             x1 = ROOT_ULLON + 0.00001;
         }
@@ -286,51 +262,12 @@ public class QuadTree {
         toReturn[1] = temp1.ullat;
         toReturn[2] = temp2.lrlon;
         toReturn[3] = temp2.lrlat;
-//        System.out.println("\nPosition: " + "/" + toReturn[0] + "/" + toReturn[1] + "/" + toReturn[2] + "/" + toReturn[3]);
 
         return toReturn;
     }
 
-    public double[] findPositionOfRasteredImage2(int depth, double x1, double y1,
-                                                double x2, double y2, double w, double h) {
-        double[] toReturn = new double[4];
-        Node temp1 = findSpecificNode(depth, x1, y1, root);
-        Node temp2;
-        double unitX = temp1.lrlon - temp1.ullon;
-        double unitY = temp1.ullat - temp1.lrlat;
-        double tempX = x1;
-        double tempY = y1;
-        int width = 0;
-        int height = 0;
-
-        /** Find some tiles to connect. */
-        while (height < h + 256) {
-            // previous base case: tempY > y2 - unitY
-            width = 0;
-            tempX = x1;
-            while (width < w + 256) {
-                // previous base case: tempX < x2 + unitX
-                tempX += unitX;
-                width += 256;
-            }
-            tempY -= unitY;
-            height += 256;
-        }
-
-        temp2 = findSpecificNode(depth, tempX - unitX, tempY + unitY, root);
-
-        toReturn[0] = temp1.ullon;
-        toReturn[1] = temp1.ullat;
-        toReturn[2] = temp2.lrlon;
-        toReturn[3] = temp2.lrlat;
-
-        System.out.println("\nPosition: " + "/" + toReturn[0] + "/" + toReturn[1] + "/" + toReturn[2] + "/" + toReturn[3]);
-
-        return toReturn;
-    }
-
-    private Node findSpecificNode(int depth, double x, double y, Node root) {
-        Node toReturn = root;
+    private Node findSpecificNode(int depth, double x, double y, Node rr) {
+        Node toReturn = rr;
         if (depth == 0) {
             return toReturn;
         }
@@ -354,41 +291,41 @@ public class QuadTree {
 
     /** Draw route directly on the map.
      * Step 1. Transfer position of points to quadtree static variable. */
-    public void transferRoutePositions(double x1, double y1, double x2, double y2) {
-        this.start_lon = x1;
-        this.start_lat = y1;
-        this.end_lon = x2;
-        this.end_lat = y2;
+    public void transferRoutePositions(double x1, double y1, double x2, double y2,
+                                       LinkedList<BerkeleyGraph.Vertex> v) {
+        this.startLon = x1;
+        this.startLat = y1;
+        this.endLon = x2;
+        this.endLat = y2;
+        this.verticesList = v;
 
         this.clear = true;
     }
 
     /** Step 2. Draw a route implicitly(Synchronize with a map).*/
-    private void drawRoute(BufferedImage displayedMap, double x0, double y0, double unitX, double unitY) {
-        if (clear == true) {
+    private void drawRoute(BufferedImage displayedMap, 
+        double x0, double y0, double unitX, double unitY) {
+        if (clear) {
             Graphics gr = displayedMap.getGraphics();
             gr.setColor(MapServer.ROUTE_STROKE_COLOR);
-            Stroke s = new BasicStroke(MapServer.ROUTE_STROKE_WIDTH_PX, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+            Stroke s = new BasicStroke(MapServer.ROUTE_STROKE_WIDTH_PX, 
+                BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
             ((Graphics2D) gr).setStroke(s);
-            gr.drawLine(Math.round((float) ((start_lon - x0) / (unitX / TILE_SIZE))),
-                    Math.round((float) ((y0 - start_lat) / (unitY / TILE_SIZE))),
-                    Math.round((float) ((end_lon - x0) / (unitX / TILE_SIZE))),
-                    Math.round((float) ((y0 - end_lat) / (unitY / TILE_SIZE))));
-//            System.out.println("\nlrlon=" + end_lon + ", ullon=" + start_lon + ", ullat=" + start_lat + ", lrlat=" + end_lat);
-//            System.out.println("w1=" + Math.round((float) ((start_lon - x0) / (unitX / TILE_SIZE))) +
-//                    ", h1=" + Math.round((float) ((y0 - start_lat) / (unitY / TILE_SIZE))) +
-//                    ", w2=" + Math.round((float) ((end_lon - x0) / (unitX / TILE_SIZE))) +
-//                    ", h2=" + Math.round((float) ((y0 - end_lat) / (unitY / TILE_SIZE))));
+            for (int i = 0; i < verticesList.size() - 1; i++) {
+                gr.drawLine((int) ((verticesList.get(i).getLon() - x0)
+                        / (unitX / (double) TILE_SIZE)),
+                        (int) ((y0 - verticesList.get(i).getLat())
+                                / (unitY / (double) TILE_SIZE)),
+                        (int) ((verticesList.get(i + 1).getLon() - x0)
+                                / (unitX / (double) TILE_SIZE)),
+                        (int) ((y0 - verticesList.get(i + 1).getLat())
+                                / (unitY / (double) TILE_SIZE)));
+            }
         }
     }
 
     /** Step 3. Clear a route by only one change. */
     public void clearRoute() {
         this.clear = false;
-    }
-
-    public static void main(String[] args) {
-        QuadTree qq = new QuadTree();
-        String a = "a";
     }
 }

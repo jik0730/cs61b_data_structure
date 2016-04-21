@@ -1,4 +1,4 @@
-import java.awt.*;
+import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.util.Base64;
@@ -9,10 +9,9 @@ import java.util.Map;
 import java.util.Set;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
+
+
 
 /* Maven is used to pull in these dependencies. */
 import com.google.gson.Gson;
@@ -69,7 +68,8 @@ public class MapServer {
     /* Define any static variables here. Do not define any instance variables of MapServer. */
     private static GraphDB g;
     private static QuadTree quadTree;
-    private static BufferedImage displayedMap;
+    private static BerkeleyGraph berkeleyGraph;
+    private static LinkedList<Long> toReturn;
 
     /**
      * Place any initialization statements that will be run before the server main loop here.
@@ -77,13 +77,15 @@ public class MapServer {
      * This is for testing purposes, and you may fail tests otherwise.
      **/
     public static void initialize() {
-        g = new GraphDB(OSM_DB_PATH);
         quadTree = new QuadTree();
+        berkeleyGraph = new BerkeleyGraph();
+        g = new GraphDB(OSM_DB_PATH, berkeleyGraph);
     }
 
     public static void main(String[] args) {
         initialize();
         staticFileLocation("/page");
+        String a = "a";
         /* Allow for all origin requests (since this is not an authenticated server, we do not
          * care about CSRF).  */
         before((request, response) -> {
@@ -215,28 +217,14 @@ public class MapServer {
         int depth = quadTree.findDepth(queryDpp);
         double[] lonAndLat = quadTree.findPositionOfRasteredImage(depth, params.get("ullon"),
                 params.get("ullat"), params.get("lrlon"), params.get("lrlat"));
-        //, params.get("w"), params.get("h")
 
-        System.out.println(params);
         HashMap<String, Object> rasteredImageParams = new HashMap<>();
-//        try {
-//            BufferedImage im = ImageIO.read(new File(IMG_ROOT + "root.png"));
-//            ImageIO.write(im, "png", os);
-//            rasteredImageParams.put("raster_ul_lon", ROOT_ULLON);
-//            rasteredImageParams.put("raster_ul_lat", ROOT_ULLAT);
-//            rasteredImageParams.put("raster_lr_lon", ROOT_LRLON);
-//            rasteredImageParams.put("raster_lr_lat", ROOT_LRLAT);
-//            rasteredImageParams.put("raster_width", (int) im.getWidth());
-//            rasteredImageParams.put("raster_height", (int) im.getHeight());
-//            rasteredImageParams.put("depth", 6);
-//            rasteredImageParams.put("query_success", true);
-//        } catch (IOException ioException) {
-//            System.out.println("Could not read image");
-//        }
+
         /** Draw whole image. */
         try {
-            displayedMap = quadTree.fullImage(depth, params.get("ullon"),
-                    params.get("ullat"), params.get("lrlon"), params.get("lrlat"), params.get("w"), params.get("h"));
+            BufferedImage displayedMap = quadTree.fullImage(depth, params.get("ullon"),
+                    params.get("ullat"), params.get("lrlon"), params.get("lrlat"), 
+                    params.get("w"), params.get("h"));
             ImageIO.write(displayedMap, "png", os);
 
             rasteredImageParams.put("raster_ul_lon", lonAndLat[0]);
@@ -270,22 +258,19 @@ public class MapServer {
         double x2 = params.get("end_lon");
         double y2 = params.get("end_lat");
 
-        quadTree.transferRoutePositions(x1, y1, x2, y2);
-
-        try {
-
-            SAXParser saxParser = SAXParserFactory.newInstance().newSAXParser();
-            MapDBHandler mapDBHandler = new MapDBHandler(g);
-            saxParser.parse(OSM_DB_PATH, mapDBHandler);
-
-            String a = "A";
-        } catch (Exception e) {
-            System.out.println("? I DONT KNOW ?");
+        LinkedList<BerkeleyGraph.Vertex> verticesList = berkeleyGraph.aStar(x1, y1, x2, y2);
+        toReturn = new LinkedList<>();
+        for (BerkeleyGraph.Vertex v : verticesList) {
+            toReturn.add(v.getID());
         }
 
+        quadTree.transferRoutePositions(x1, y1, x2, y2, verticesList);
 
 
-        return new LinkedList<>();
+
+
+
+        return toReturn;
     }
 
     /**
@@ -303,6 +288,20 @@ public class MapServer {
      * cleaned <code>prefix</code>.
      */
     public static List<String> getLocationsByPrefix(String prefix) {
+//        HashMap<Long, String> temp = berkeleyGraph.getCleanedNames();
+//        HashMap<Long, BerkeleyGraph.Vertex> temp2 = berkeleyGraph.getNames();
+//        LinkedList<String> toReturn2 = new LinkedList<>();
+//        for (Long l : temp.keySet()) {
+//            String fullstring = temp.get(l);
+//            if (fullstring.length() >= prefix.length()) {
+//                String s2 = fullstring.substring(0, prefix.length());
+//                if (s2.equals(prefix)) {
+//                    toReturn2.add(temp2.get(l).getName());
+//                }
+//            }
+//        }
+//
+//        return toReturn2;
         return new LinkedList<>();
     }
 
@@ -319,6 +318,23 @@ public class MapServer {
      * "id" -> Number, The id of the node. <br>
      */
     public static List<Map<String, Object>> getLocations(String locationName) {
+//        String cleanedLocation = GraphDB.cleanString(locationName);
+//        HashMap<Long, String> cleanedNames = berkeleyGraph.getCleanedNames();
+//        HashMap<Long, BerkeleyGraph.Vertex> verticesInfo = berkeleyGraph.getNames();
+//        LinkedList<Map<String, Object>> toReturn3 = new LinkedList<>();
+//
+//        for (Long l : cleanedNames.keySet()) {
+//            if (cleanedNames.get(l).equals(cleanedLocation)) {
+//                Map<String, Object> m = new HashMap<>();
+//                m.put("lat", (Number) verticesInfo.get(l).getLat());
+//                m.put("lon", (Number) verticesInfo.get(l).getLon());
+//                m.put("name", (String) verticesInfo.get(l).getName());
+//                m.put("id", (Number) l);
+//                toReturn3.add(m);
+//            }
+//        }
+//
+//        return toReturn3;
         return new LinkedList<>();
     }
 }
