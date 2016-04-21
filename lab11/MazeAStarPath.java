@@ -20,6 +20,7 @@ public class MazeAStarPath extends MazeExplorer {
 
     /** Estimate of the distance from v to the target. */
     private int h(int v) {
+
         return -1;
     }
 

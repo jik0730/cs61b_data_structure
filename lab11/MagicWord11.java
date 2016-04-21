@@ -7,4 +7,4 @@ public class MagicWord11 {
         String magicWord = "bean";
         return magicWord;
     }
-} 
+}

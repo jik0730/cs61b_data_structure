@@ -3,10 +3,8 @@ package hw3.hash;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-import java.util.Set;
-import java.util.HashSet;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
 import edu.princeton.cs.algs4.StdRandom;
 
 
@@ -28,7 +26,24 @@ public class TestComplexOomage {
          * and ensure that no bucket has fewer than N / 50
          * Oomages and no bucket has more than N / 2.5 Oomages.
          */
-        return false;
+
+        Object[] elements = oomages.toArray();
+        int[] bucket = new int[10];
+
+        for (int i = 0; i < oomages.size(); i++) {
+            Oomage temp = (Oomage) elements[i];
+            int hashcode = (temp.hashCode() & 0x7FFFFFFF) % 10;
+            bucket[hashcode] += 1;
+        }
+
+        for (int i = 0; i < bucket.length; i++) {
+            if ((double) bucket[i] < (double) oomages.size() / 50.0
+                     || (double) bucket[i] > (double) oomages.size() / 2.5) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 
@@ -49,6 +64,18 @@ public class TestComplexOomage {
         /* TODO: Create a Set that shows the flaw in the hashCode function.
          */
         HashSet<ComplexOomage> oomages = new HashSet<ComplexOomage>();
+
+        for (int i = 0; i < 100; i++) {
+            LinkedList<Integer> temp = new LinkedList<>();
+            for (int j = 0; j < 5; j++) {
+                temp.addLast(10);
+            }
+            for (int j = 0; j < i; j++) {
+                temp.addLast(0);
+            }
+            temp.addLast(20);
+            oomages.add(new ComplexOomage(temp));
+        }
 
         assertTrue(haveNiceHashCodeSpread(oomages));
     }

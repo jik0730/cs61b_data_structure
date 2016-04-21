@@ -1,0 +1,33 @@
+SpeedTestResults
+written by: Ingyo Chung
+
+Here is speed test results.
+In all experiments, length of strings were all 100.
+
+When I put 100 strings in each Map, each takes:
+ULLMap: 0.01 sec
+BSTMap: 0.00 sec
+TreeMap: 0.00 sec
+-> There is no big difference with small amount of strings.
+
+When I put 1000 strings in each Map, each takes:
+ULLMap: 0.01 sec
+BSTMap: 0.00 sec
+TreeMap: 0.00 sec
+-> There is also no big difference with small amount of strings.
+
+When I put 10000 strings in each Map, each takes:
+ULLMap: 1.14 sec
+BSTMap: 0.03 sec
+TreeMap: 0.03 sec
+-> There is a little difference between ULLMap and the others.
+  But for BSTMap and TreeMap, there is no big difference with above two experments.
+
+
+When I put 100000 strings in each Map, each takes:
+ULLMap: StackOverFlow Exception
+BSTMap: 0.24 sec
+TreeMap: 0.25 sec
+-> ULLMap cannot handle this amount of strings and the other maps can handle this and even there is no huge difference with other experiments which dealt with small amount of strings rather than in this experiment.
+
+Overall: There is big performance difference between ULLMap and the others, and between BSTMap and TreeMap, the performace of each are almost same.

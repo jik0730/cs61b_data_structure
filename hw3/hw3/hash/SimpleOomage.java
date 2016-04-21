@@ -2,6 +2,7 @@ package hw3.hash;
 import java.awt.Color;
 import edu.princeton.cs.algs4.StdRandom;
 import edu.princeton.cs.algs4.StdDraw;
+import sun.java2d.pipe.SpanShapeRenderer;
 
 
 public class SimpleOomage implements Oomage {
@@ -10,23 +11,37 @@ public class SimpleOomage implements Oomage {
     protected int blue;
 
     private static final double WIDTH = 0.01;
-    private static final boolean USE_PERFECT_HASH = false;
+    private static final boolean USE_PERFECT_HASH = true;
 
-    /*
+    
     @Override
     public boolean equals(Object o) {
         // TODO: Uncomment this method and make it correct.
-    }*/
+        if (this == o) {
+            return true;
+        }
 
-    /*@Override
+        if (o == null) {
+            return false;
+        }
+
+        if (this.getClass() != o.getClass()) {
+            return false;
+        }
+
+        SimpleOomage o_rep = (SimpleOomage) o;
+        return (this.red == o_rep.red) && (this.green == o_rep.green) && (this.blue == o_rep.blue);
+    }
+
+    @Override
     public int hashCode() {
         if (!USE_PERFECT_HASH) {
             return red + green + blue;
         } else {
             // TODO: Replace with a "perfect" hashing function.
-            return 0;
+            return (256 * 256 * red) + (256 * green) + (blue);
         }
-    }*/
+    }
 
     public SimpleOomage(int r, int g, int b) {
         if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
