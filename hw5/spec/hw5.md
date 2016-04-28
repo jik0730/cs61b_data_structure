@@ -68,9 +68,9 @@ Finding and removing a seam involves three parts and a tiny bit of notation:
 		A high-energy pixel corresponds to a pixel where there is a sudden change in color (such as the boundary between the sea and sky or the boundary between the surfer on the left and the ocean behind him). In the image above, pixels with higher energy values have whiter values. The seam-carving technique avoids removing such high-energy pixels.
 
 2. *Seam identification*. The next step is to find a vertical seam of minimum total energy. This is similar to the classic shortest path problem in an edge-weighted digraph except for the following:
-		* The weights are on the vertices instead of the edges.
-		* We want to find the shortest path from any of W pixels in the top row to any of the W pixels in the bottom row.
-		* The digraph is acyclic, where there is a downward edge from pixel (x, y) to pixels (x − 1, y + 1), (x, y + 1), and (x + 1, y + 1), assuming that the coordinates are in the prescribed range.
+    * The weights are on the vertices instead of the edges.
+    * We want to find the shortest path from any of W pixels in the top row to any of the W pixels in the bottom row.
+    * The digraph is acyclic, where there is a downward edge from pixel (x, y) to pixels (x − 1, y + 1), (x, y + 1), and (x + 1, y + 1), assuming that the coordinates are in the prescribed range.
 
 3. *Seam Removal*. The final step is remove from the image all of the pixels along the seam. The logic for this method has been implemented for you in the supplementary SeamRemover class, provided in SeamRemover.jar. 
 
@@ -98,7 +98,7 @@ The SeamCarver API. Your task is to implement the following mutable data type:
 
 ### energy(): Computing the Energy of a Pixel
 
-We will use the dual gradient energy function: The energy of pixel (x, y) is $\Delta\_x^2(x, y) + \Delta\_y^2(x, y)$, where the square of the x-gradient $\Delta\_x^2(x, y) = R\_x(x, y)^2 + G\_x(x, y)^2 + B\_x(x, y)^2$, and where the central differences $R\_x(x, y)$, $G\_x(x, y)$, and $B\_x(x, y)$ are the absolute value in differences of red, green, and blue components between pixel (x + 1, y) and pixel (x − 1, y). The square of the y-gradient $\Delta y\_2(x, y)$ is defined in an analogous manner. We define the energy of pixels at the border of the image to use the same pixels but to replace the non-existant pixel with the pixel from the opposite edge.
+We will use the dual gradient energy function: The energy of pixel (x, y) is $\Delta\_x^2(x, y) + \Delta\_y^2(x, y)$, where the square of the x-gradient $\Delta\_x^2(x, y) = R\_x(x, y)^2 + G\_x(x, y)^2 + B\_x(x, y)^2$, and where the central differences $R\_x(x, y)$, $G\_x(x, y)$, and $B\_x(x, y)$ are the absolute value in differences of red, green, and blue components between pixel (x + 1, y) and pixel (x − 1, y). The square of the y-gradient $\Delta\_y^2(x, y)$ is defined in an analogous manner. We define the energy of pixels at the border of the image to use the same pixels but to replace the non-existant pixel with the pixel from the opposite edge.
 
 	As an example, consider the 3-by-4 image with RGB values (each component is an integer between 0 and 255) as shown in the table below.
 
@@ -137,15 +137,14 @@ $G_x(1, 2) = 205 − 203 = 2$,<Br>
 $B_x(1, 2) = 255 − 51 = 204$,<br>
 </blockquote>
 
-yielding $\Delta x\_2(1, 2) = 2^2 + 204^2 = 41620$.
+yielding $\Delta\_x^2(1, 2) = 2^2 + 204^2 = 41620$.
 
 <blockquote>
 $R_y(1, 2) = 255 − 255 = 0$, <br>
 $G_y(1, 2) = 255 − 153 = 102$, <br>
 $B_y(1, 2) = 153 − 153 = 0$, <br>
 </blockquote>
-yielding $\Delta y\_2(1, 2) = 102^2 = 10404$.
-
+yielding $\Delta\_y^2(1, 2) = 102^2 = 10404$.
 Thus, the energy of pixel (1, 2) is $41620 + 10404 = 52024$. 
 
 **Test your understanding:** The energy of pixel (1, 1) is $204^2 + 103^2 = 52225$.
@@ -157,7 +156,7 @@ $R_x(1, 0) = 255 − 255 = 0$, <br>
 $G_x(1, 0) = 101 − 101 = 0$, <br>
 $B_x(1, 0) = 255 − 51 = 204$, <br>
 </blockquote>
-yielding $\Delta x\_2(1, 0) = 204^2 = 41616$.
+yielding $\Delta\_x^2(1, 0) = 204^2 = 41616$.
 
 Since there is no pixel (x, y - 1) we wrap around and use the corresponding pixel from the bottom row the image, thus performing calculations based on pixel (x, y + 1) and pixel (x, height − 1). 
 <blockquote>
@@ -166,7 +165,7 @@ $G_y(1, 0) = 255 − 153 = 102$, <br>
 $B_y(1, 0) = 153 − 153 = 0$, <br>
 </blockquote>
 
-yielding $\Delta y\_2(1, 2) = 102^2 = 10404$.
+yielding $\Delta\_y^2(1, 2) = 102^2 = 10404$.
 
 Thus, the energy of pixel (1, 2) is $41616 + 10404 = 52020$.
 	
@@ -318,15 +317,16 @@ $M(i, j)$ - cost of minimum cost path ending at (i, j)<br>
 $e(i, j)$ - energy cost of pixel at location (i, j)
 
 Then each subproblem is the calculation of $M(i, j)$ for some $i$ and $j$. The top row is trivial, $M(i, 0)$ is just $e(i, 0)$ for all $i$. For lower rows, we can find $M(i, j)$ simply by adding the $e(i, j)$ to the minimum cost path ending at its top left, top middle, and top right pixels, or more formally:
-
-	![Seam Carving Subproblem](images/seamCarvingSubproblem.png)
+$$M(i, j) = e(i, j) + min(M(i - 1, j - 1), M(i, j - 1), M(i + 1, j - 1))$$
 
 In short, we start from one side of the 2D image array and process row-by-row or column-by-column (for vertical and horizontal seam carving respectively).
 
 	![Seam Carving Cumulative Energy](images/seamCarvingDP.png)
 	![Seam Carving Final Paths](images/seamCarvingPath.png)
 
-An equivalent (but slower approach) is to build an explicit Graph object and run the DAGSPT algorithm. You are welcome to try this, but be warned it is slower.
+**Addendum: The Java language does not deal well with deep recursion, and thus a recursive approach will almost certainly not be able to handle images of largish size (say 500x500).** We recommend writing your code iteratively.
+
+An equivalent (but slower approach) is to build an explicit Graph object and run the DAGSPT algorithm. You are welcome to try this approach, but be warned it is slower, and it may not be possible to sufficiently optimize your code so that it passes the autograder timing tests.
 
 ### findHorizontalSeam(): Avoiding Redundancy
 
@@ -374,11 +374,23 @@ Fun #2: Try to implement a version of the `SeamCarver` class that avoids the nee
 
 Submission
 --------------------------------
-This section will be updated once the Gradescope autograder is up (ETA: April 22nd). In the meantime, compare your code's output to the provided printSeams files by using PrintSeams.java.
+Submit `SeamCarver.java` and any supporting classes that you created, if applicable. You do not need to submit `SeamRemover.jar`.
 
 FAQ
 --------------------------------
-To be updated with commonly seen questions/issues.
+
+#### How do I debug this?
+
+Make sure to try out the "Useful Files" above, especially the PrintEnergy and PrintSeams classes.
+
+#### My code is slow (failing timing tests), what can I do to speed it up?
+
+Some possible optimizations include (in decreasing order of likely impact):
+ - **Avoiding recalculation of energies for the same pixel over and over** (e.g. through creation of an explicit energy matrix of type `double[][]`). Essentially you want to memoize energy calculations. 
+ - Don't use a HashMap for looking up data by row and column. Instead, use a 2D array. They are much faster. HashMaps are constant time, but the constant factor is significant.
+ - Not using `Math.pow` or `Math.abs`.
+ - Not storing an explicit `edgeTo` data structure. It is possible to rebuild the seam ONLY from the values for `M(i, j)`! That is, you don't need to actually record the predecessor like you did in the 8puzzle assignment. 
+ - Using a more clever approach than transposing your images (though this is not required to pass the autograder).
 
 Credits
 --------------------------------
