@@ -58,8 +58,6 @@ public class Tries {
                 temp = temp.getValue(c);
             }
         }
-        String a = "a";
-
     }
 
     public boolean inspectTheWordExist(String word) {

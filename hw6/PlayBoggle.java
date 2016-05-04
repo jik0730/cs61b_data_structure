@@ -9,12 +9,18 @@ public class PlayBoggle {
     private Board board;
     private Tries tries;
     private HashSet<String> words;
+    private boolean marked[][];
 
     /** Construct board and tries. */
     public PlayBoggle(List<String> boardList, List<String> triesList) {
         this.board = new Board(boardList);
         this.tries = new Tries(triesList);
         this.words = new HashSet<>();
+
+        this.marked = new boolean[board.getyLength()][];
+        for (int k = 0; k < board.getyLength(); k += 1) {
+            this.marked[k] = new boolean[board.getxLength()];
+        }
     }
 
     /** Play Boggle Game! */
@@ -23,14 +29,71 @@ public class PlayBoggle {
 
         for (int i = 0; i < board.length; i += 1) {
             for (int j = 0; j < board[i].length; j += 1) {
-                playForeach(board, i, j, words);
+                // playForeach(board, i, j, words);
+                Node cur = new Node(i, j, Character.toString(board[i][j]), this.board);
+                newBoggleAlgorithm(cur, board, words);
             }
         }
 
         return new ArrayList<>(words);
     }
 
+    /** New Boggle algorithm. */
+    private void newBoggleAlgorithm(Node currentNode, char[][] board, HashSet<String> result) {
+
+        for (Node n : adj(currentNode, board, result)) {
+            marked[currentNode.getI()][currentNode.getJ()] = true;
+            newBoggleAlgorithm(n, board, result);
+            marked[currentNode.getI()][currentNode.getJ()] = false;
+        }
+    }
+
+    /** New adj algorithm for new Boggle algorithm. */
+    private HashSet<Node> adj(Node n, char[][] board, HashSet<String> result) {
+        HashSet<Node> toReturn = new HashSet<>();
+        String ori = n.getS();
+        int i1 = n.getI() - 1;
+        int j1 = n.getJ() - 1;
+        int i2 = n.getI() + 1;
+        int j2 = n.getJ() + 1;
+
+        if (i1 == -1) {
+            i1 = n.getI();
+        }
+        if (j1 == -1) {
+            j1 = n.getJ();
+        }
+        if (i2 == this.board.getyLength()) {
+            i2 = n.getI();
+        }
+        if (j2 == this.board.getxLength()) {
+            j2 = n.getJ();
+        }
+
+        for (int m = i1; m <= i2; m += 1) {
+            for (int n2 = j1; n2 <= j2; n2 += 1) {
+                if (m == n.getI() && n2 == n.getJ()) {
+                    continue;
+                } else if (/*n.*/marked[m][n2]) {
+                    continue;
+                } else {
+                    String tempS = ori + Character.toString(board[m][n2]);
+                    if (tries.inspectTheWordPossiblyExist(tempS)) {
+                        if (tries.inspectTheWordExist(tempS)) {
+                            result.add(tempS);
+                        }
+                        Node temp = new Node(m, n2, tempS, n);
+                        toReturn.add(temp);
+                    }
+                }
+            }
+        }
+
+        return toReturn;
+    }
+
     /** Boggle algorithm for each character. */
+    /** Secondary Boggle Algorithm. */
     private void playForeach(char[][] board, int i, int j, HashSet<String> result) {
         HashSet<Node> search = new HashSet<>();
         search.add(new Node(i, j, Character.toString(board[i][j]), this.board));
@@ -71,8 +134,6 @@ public class PlayBoggle {
         }
     }
 
-    /** 버그! 한번 marked 되면 다시 못 밟음!! -> 수정하기 */
-
     /** Combine words with each adj letters(Not remove original one). */
     private HashSet<Node> combineWithAdj(HashSet<Node> search, char[][] board) {
         if (search.isEmpty()) {
@@ -104,7 +165,7 @@ public class PlayBoggle {
                 for (int n2 = j1; n2 <= j2; n2 += 1) {
                     if (m == n.getI() && n2 == n.getJ()) {
                         continue;
-                    } else if (n.marked[m][n2]) {
+                    } else if (/*n.*/marked[m][n2]) {
                         continue;
                     } else {
                         String tempS = ori + Character.toString(board[m][n2]);
@@ -120,35 +181,36 @@ public class PlayBoggle {
         return toReturn;
     }
 
+    /** The parts annotated are for old version of boggle algorithm. */
     private class Node {
         private int i;
         private int j;
         private String s;
-        private boolean[][] marked;
+        //private boolean[][] marked;
 
         private Node(int i, int j, String s, Node prev) {
             this.i = i;
             this.j = j;
             this.s = s;
-            this.marked = new boolean[prev.marked.length][];
-            for (int k = 0; k < prev.marked.length; k += 1) {
-                this.marked[k] = new boolean[prev.marked[k].length];
-                for (int q = 0; q < this.marked[k].length; q += 1) {
-                    this.marked[k][q] = prev.marked[k][q];
-                }
-            }
-            this.marked[i][j] = true;
+//            this.marked = new boolean[prev.marked.length][];
+//            for (int k = 0; k < prev.marked.length; k += 1) {
+//                this.marked[k] = new boolean[prev.marked[k].length];
+//                for (int q = 0; q < this.marked[k].length; q += 1) {
+//                    this.marked[k][q] = prev.marked[k][q];
+//                }
+//            }
+//            this.marked[i][j] = true;
         }
 
         private Node(int i , int j, String s, Board board) {
             this.i = i;
             this.j = j;
             this.s = s;
-            this.marked = new boolean[board.getyLength()][];
-            for (int k = 0; k < board.getyLength(); k += 1) {
-                this.marked[k] = new boolean[board.getxLength()];
-            }
-            this.marked[i][j] = true;
+//            this.marked = new boolean[board.getyLength()][];
+//            for (int k = 0; k < board.getyLength(); k += 1) {
+//                this.marked[k] = new boolean[board.getxLength()];
+//            }
+//            this.marked[i][j] = true;
         }
 
         public int getI() {
