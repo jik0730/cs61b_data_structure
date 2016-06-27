@@ -4,7 +4,7 @@ public class MagicWord14 {
         /* replace magicWord with the magic word or use "early"
          *  if you are submitting early */
 
-        String magicWord = "";
+        String magicWord = "kallisti";
         return magicWord;
     }
 } 

@@ -2,14 +2,14 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.Before;
 
-<<<<<<< HEAD
+//<<<<<<< HEAD
 import java.io.*;
 import java.util.Collections;
-=======
+//=======
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
->>>>>>> 665cf52c2bb41b1d9a9f64c0c2f019f71261804f
+//>>>>>>> 665cf52c2bb41b1d9a9f64c0c2f019f71261804f
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
